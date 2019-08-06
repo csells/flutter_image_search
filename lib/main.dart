@@ -22,7 +22,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  final title = 'My Flutter App';
+  final title = 'Flutter Image Search';
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class _ImageSearchState extends State<ImageSearch> {
   @override
   Widget build(BuildContext context) => Scrollbar(
         child: _images == null
-            ? Text("Loading...")
+            ? Center(child: CircularProgressIndicator())
             : ListView.builder(
                 itemCount: _images.length,
                 itemBuilder: (_, i) => Container(
