@@ -1,8 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb;
-import 'package:http/http.dart' as http;
+import 'package:flutter_image_search/CachingSearchEngine.dart';
 import 'cse-results.dart' as cse;
 
 void _desktopInitHack() {
@@ -44,10 +43,13 @@ class ImageSearch extends StatefulWidget {
 }
 
 class _ImageSearchState extends State<ImageSearch> {
-  final String _cseKey;
+  final CachingSearchEngine _engine;
   List<cse.Item> _items;
 
-  _ImageSearchState() : _cseKey = File("cse-key.txt").readAsStringSync();
+  _ImageSearchState()
+      : _engine = CachingSearchEngine(
+            cseEngineID: File("cse-engine-id.txt").readAsStringSync(),
+            cseKey: File("cse-key.txt").readAsStringSync());
 
   @override
   void initState() {
@@ -55,41 +57,28 @@ class _ImageSearchState extends State<ImageSearch> {
     search();
   }
 
+  void search() => _engine.imageSearch('kitties').then((res) => setState(() => _items = res.items));
+
   @override
   Widget build(BuildContext context) => Scrollbar(
         child: _items == null
             ? Center(child: CircularProgressIndicator())
-            : GridView.count(
-                crossAxisCount: 3,
-                children: [
-                  for (var item in _items)
-                    Container(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            // image: CachedNetworkImageProvider(item.link),
-                            image: NetworkImage(item.link),
+            : Scrollbar(
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  children: [
+                    for (var item in _items)
+                      Container(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(item.link),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
       );
-
-  // TODO: caching!!!
-  void search({String q = '5e goblin'}) async {
-    var params = {
-      'q': q,
-      'cx': '007845364583112319514:wrtaiv3qw8k',
-      'searchType': 'image',
-      'key': _cseKey,
-    };
-    var query = Uri(queryParameters: params).query;
-    var resp = await http.get('https://www.googleapis.com/customsearch/v1?$query');
-    if (resp.statusCode != 200) throw Exception('get error: statusCode= ${resp.statusCode}');
-
-    var res = cse.Results.fromRawJson(resp.body);
-    setState(() => _items = res.items);
-  }
 }
