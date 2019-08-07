@@ -67,16 +67,7 @@ class _ImageSearchState extends State<ImageSearch> {
                 child: GridView.count(
                   crossAxisCount: 3,
                   children: [
-                    for (var item in _items)
-                      Container(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: NetworkImage(item.link),
-                            ),
-                          ),
-                        ),
-                      ),
+                    for (var item in _items) Image.network(item.link),
                   ],
                 ),
               ),
