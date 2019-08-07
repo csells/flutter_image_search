@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'cse-results.dart' as cse;
@@ -61,19 +60,7 @@ class _ImageSearchState extends State<ImageSearch> {
             ? Center(child: CircularProgressIndicator())
             : GridView.count(
                 crossAxisCount: 3,
-                children: [
-                  for (var item in _items)
-                    Container(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            // image: CachedNetworkImageProvider(item.link),
-                            image: NetworkImage(item.link),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+                children: [for (var item in _items) Image.network(item.link)],
               ),
       );
 
