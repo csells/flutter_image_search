@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb;
-import 'package:flutter_image_search/caching%20_network_image.dart';
+import 'package:path/path.dart' as path;
+import 'caching_network_image.dart';
 import 'caching_search_engine.dart';
 import 'cse-results.dart' as cse;
 
@@ -59,7 +60,23 @@ class _ImageSearchState extends State<ImageSearch> {
     search();
   }
 
-  void search() => _engine.imageSearch('kitties').then((res) => setState(() => _items = res.items));
+  static final _imageExts = ['.jpg', '.jpeg', '.bmp', '.png'];
+  static bool _isImageExt(String ext) => _imageExts.contains(ext.toLowerCase());
+
+  void search() async {
+    var res = await _engine.imageSearch('kitties');
+
+    var items = List<cse.Item>();
+    for (var item in res.items) {
+      // only show results that look like they're images
+      // TODO: actually download and check the MIME type
+      var pathPart = item.link.split('?')[0]; // file path or url path w/o query string portion
+      var ext = path.extension(pathPart);
+      if (_isImageExt(ext)) items.add(item);
+    }
+
+    setState(() => _items = items);
+  }
 
   @override
   Widget build(BuildContext context) => Scrollbar(

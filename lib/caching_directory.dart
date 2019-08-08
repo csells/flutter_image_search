@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
@@ -8,7 +7,7 @@ class CachingDirectory {
   final String cacheExt;
   CachingDirectory(String dir, {this.cacheExt}) : cacheDir = Directory(dir);
 
-  Future<File> _getCacheFile(String key) async {
+  Future<File> getCacheFile(String key) async {
     await cacheDir.create();
     var ext = cacheExt;
     if (ext == null) {
@@ -17,39 +16,12 @@ class CachingDirectory {
       ext = path.extension(pathPart);
     }
 
-    return File(path.join(cacheDir.path, '${key.hashCode}$ext'));
-  }
-
-  Future<File> _getExistingCacheFile(String key) async {
-    var file = await _getCacheFile(key);
-    var exists = await file.exists();
-
-    if (exists) {
+    var file = File(path.join(cacheDir.path, '${key.hashCode}$ext'));
+    if (await file.exists()) {
       debugPrint('"$key" found in ${file.path}');
     } else {
-      debugPrint('"$key" NOT FOUND in ${cacheDir.path}');
+      debugPrint('"$key" NOT FOUND in ${file.path}');
     }
-
-    return exists ? file : null;
-  }
-
-  Future<String> getCachedString(String key) async {
-    var file = await _getExistingCacheFile(key);
-    return file == null ? null : file.readAsString();
-  }
-
-  Future setCachedString(String key, String value) async {
-    var file = await _getCacheFile(key);
-    await file.writeAsString(value);
-  }
-
-  Future<Uint8List> getCachedBytes(String key) async {
-    var file = await _getExistingCacheFile(key);
-    return file == null ? null : file.readAsBytes();
-  }
-
-  Future setCachedBytes(String key, Uint8List value) async {
-    var file = await _getCacheFile(key);
-    await file.writeAsBytes(value);
+    return file;
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'cse-results.dart';
@@ -8,13 +6,18 @@ import 'caching_directory.dart';
 class CachingSearchEngine {
   final String cseKey;
   final String cseEngineID;
-  final _cachingDir = CachingDirectory('cse-cache', cacheExt: '.json');
+  final _resultsCache = CachingDirectory('cse-cache', cacheExt: '.json');
 
   CachingSearchEngine({@required this.cseEngineID, @required this.cseKey});
 
   Future<Results> imageSearch(String q) async {
-    var json = await _cachingDir.getCachedString(q);
-    if (json == null) {
+    String json;
+
+    // if the file doesn't exist in the cache, write it
+    var file = await _resultsCache.getCacheFile(q);
+    if (await file.exists()) {
+      json = await file.readAsString();
+    } else {
       var params = {
         'cx': cseEngineID,
         'key': cseKey,
@@ -23,11 +26,12 @@ class CachingSearchEngine {
       };
 
       var query = Uri(queryParameters: params).query;
-      var resp = await http.get('https://www.googleapis.com/customsearch/v1?$query');
+      var url = 'https://www.googleapis.com/customsearch/v1?$query';
+      var resp = await http.get(url);
       if (resp.statusCode != 200) throw Exception('get error: statusCode= ${resp.statusCode}');
 
       json = resp.body;
-      await _cachingDir.setCachedString(q, json);
+      await file.writeAsString(json);
     }
 
     return Results.fromRawJson(json);

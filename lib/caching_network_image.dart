@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_search/caching_directory.dart';
 import 'package:http/http.dart' as http;
@@ -17,20 +18,28 @@ class _CachingNetworkImageState extends State<CachingNetworkImage> {
   @override
   void initState() {
     super.initState();
-    download();
+    load();
   }
 
-  void download() async {
-    var bytes = await _imageCache.getCachedBytes(widget.url);
-    if (bytes == null) {
+  void load() async {
+    Uint8List bytes;
+
+    // if the file doesn't exist in the cache, write it
+    var file = await _imageCache.getCacheFile(widget.url);
+    if (await file.exists()) {
+      bytes = await file.readAsBytes();
+    } else {
       var resp = await http.get(widget.url);
+      if (resp.statusCode != 200) throw Exception('get error: statusCode= ${resp.statusCode}');
+
       bytes = resp.bodyBytes;
-      await _imageCache.setCachedBytes(widget.url, bytes);
+      await file.writeAsBytes(bytes, flush: true);
     }
 
     setState(() => _image = Image.memory(bytes));
   }
 
   @override
-  Widget build(BuildContext context) => _image == null ? CircularProgressIndicator() : _image;
+  Widget build(BuildContext context) =>
+      _image == null ? Center(child: CircularProgressIndicator()) : _image;
 }
