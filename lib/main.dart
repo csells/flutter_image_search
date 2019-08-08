@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb;
-import 'package:flutter_image_search/CachingSearchEngine.dart';
+import 'package:flutter_image_search/caching%20_network_image.dart';
+import 'caching_search_engine.dart';
 import 'cse-results.dart' as cse;
 
 void _desktopInitHack() {
@@ -48,8 +49,9 @@ class _ImageSearchState extends State<ImageSearch> {
 
   _ImageSearchState()
       : _engine = CachingSearchEngine(
-            cseEngineID: File("cse-engine-id.txt").readAsStringSync(),
-            cseKey: File("cse-key.txt").readAsStringSync());
+          cseEngineID: File("cse-engine-id.txt").readAsStringSync(),
+          cseKey: File("cse-key.txt").readAsStringSync(),
+        );
 
   @override
   void initState() {
@@ -67,7 +69,7 @@ class _ImageSearchState extends State<ImageSearch> {
                 child: GridView.count(
                   crossAxisCount: 3,
                   children: [
-                    for (var item in _items) Image.network(item.link),
+                    for (var item in _items) CachingNetworkImage(item.link),
                   ],
                 ),
               ),
