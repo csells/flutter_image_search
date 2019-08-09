@@ -79,16 +79,14 @@ class _ImageSearchState extends State<ImageSearch> {
   }
 
   @override
-  Widget build(BuildContext context) => Scrollbar(
-        child: _items == null
-            ? Center(child: CircularProgressIndicator())
-            : Scrollbar(
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  children: [
-                    for (var item in _items) CachingNetworkImage(item.link),
-                  ],
-                ),
-              ),
-      );
+  Widget build(BuildContext context) => _items == null
+      ? Center(child: CircularProgressIndicator())
+      : Scrollbar(
+          child: GridView.count(
+            crossAxisCount: 3,
+            children: [
+              for (var item in _items) CachingNetworkImage(item.link),
+            ],
+          ),
+        );
 }
