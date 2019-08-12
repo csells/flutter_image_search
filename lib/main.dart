@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride, kIsWeb;
@@ -46,6 +47,7 @@ class ImageSearch extends StatefulWidget {
 
 class _ImageSearchState extends State<ImageSearch> {
   final CachingSearchEngine _engine;
+  final _debouncer = Debouncer();
   List<cse.Item> _items;
 
   _ImageSearchState()
@@ -54,17 +56,13 @@ class _ImageSearchState extends State<ImageSearch> {
           cseKey: File("cse-key.txt").readAsStringSync(),
         );
 
-  @override
-  void initState() {
-    super.initState();
-    search();
-  }
-
   static final _imageExts = ['.jpg', '.jpeg', '.bmp', '.png'];
   static bool _isImageExt(String ext) => _imageExts.contains(ext.toLowerCase());
 
-  void search() async {
-    var res = await _engine.imageSearch('kitties');
+  Future search(String q) async {
+    debugPrint('search: q= "$q"');
+
+    var res = await _engine.imageSearch(q);
 
     var items = List<cse.Item>();
     for (var item in res.items) {
@@ -79,20 +77,56 @@ class _ImageSearchState extends State<ImageSearch> {
   }
 
   @override
-  Widget build(BuildContext context) => _items == null
-      ? Center(child: CircularProgressIndicator())
-      : Column(
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
           children: [
-            Expanded(
-              child: Scrollbar(
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  children: [
-                    for (var item in _items) CachingNetworkImage(item.link),
-                  ],
-                ),
-              ),
+            TextField(
+              decoration: InputDecoration(labelText: 'Search'),
+              onChanged: onSearchTextChanged,
             ),
+            _items == null
+                ? Center(child: CircularProgressIndicator())
+                : Expanded(
+                    child: Scrollbar(
+                      child: GridView.count(
+                        crossAxisCount: 3,
+                        children: [
+                          for (var item in _items) CachingNetworkImage(item.link),
+                        ],
+                      ),
+                    ),
+                  ),
           ],
-        );
+        ),
+      );
+
+  void onSearchTextChanged(String value) {
+    debugPrint('onSearchTextChanged: value= "$value"');
+
+    if (value.length < 3)
+      _debouncer.stop();
+    else
+      _debouncer.run(() async => await search(value));
+    setState(() => _items = null);
+  }
+}
+
+class Debouncer {
+  final int milliseconds;
+  VoidCallback action;
+  Timer _timer;
+
+  Debouncer({this.milliseconds = 500});
+
+  void run(VoidCallback action) {
+    stop();
+    _timer = Timer(Duration(milliseconds: milliseconds), action);
+  }
+
+  void stop() {
+    if (_timer == null) return;
+    _timer.cancel();
+    _timer = null;
+  }
 }
