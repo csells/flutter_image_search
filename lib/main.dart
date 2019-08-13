@@ -49,6 +49,7 @@ class _ImageSearchState extends State<ImageSearch> {
   final CachingSearchEngine _engine;
   final _debouncer = Debouncer();
   List<cse.Item> _items;
+  String _selectedLink;
 
   _ImageSearchState()
       : _engine = CachingSearchEngine(
@@ -86,17 +87,26 @@ class _ImageSearchState extends State<ImageSearch> {
               onChanged: onSearchTextChanged,
             ),
             _items == null
-                ? Center(child: CircularProgressIndicator())
+                ? (_debouncer.running ? Center(child: CircularProgressIndicator()) : Container())
                 : Expanded(
                     child: Scrollbar(
                       child: GridView.count(
                         crossAxisCount: 3,
                         children: [
-                          for (var item in _items) CachingNetworkImage(item.link),
+                          for (var item in _items)
+                            RawMaterialButton(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CachingNetworkImage(item.link),
+                              ),
+                              fillColor: item.link == _selectedLink ? Colors.blue : Colors.white,
+                              onPressed: () => setState(() => _selectedLink = item.link),
+                            ),
                         ],
                       ),
                     ),
                   ),
+            Text(_selectedLink ?? ''),
           ],
         ),
       );
@@ -104,11 +114,15 @@ class _ImageSearchState extends State<ImageSearch> {
   void onSearchTextChanged(String value) {
     debugPrint('onSearchTextChanged: value= "$value"');
 
-    if (value.length < 3)
+    if (value.length < 5)
       _debouncer.stop();
     else
       _debouncer.run(() async => await search(value));
-    setState(() => _items = null);
+
+    setState(() {
+      _items = null;
+      _selectedLink = null;
+    });
   }
 }
 
@@ -129,4 +143,6 @@ class Debouncer {
     _timer.cancel();
     _timer = null;
   }
+
+  bool get running => _timer != null;
 }
