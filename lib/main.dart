@@ -86,12 +86,10 @@ class _ImageSearchState extends State<ImageSearch> {
               decoration: InputDecoration(labelText: 'Search'),
               onChanged: onSearchTextChanged,
             ),
-            // TODO: don't show the progress indicator if there are no results
-            // TODO: don't show the progress indicator unless we're actually waiting on search results
-            _debouncer.isRunning
-                ? Center(child: CircularProgressIndicator())
-                : Expanded(
-                    child: Scrollbar(
+            Expanded(
+              child: _debouncer.isRunning
+                  ? Center(child: CircularProgressIndicator())
+                  : Scrollbar(
                       child: GridView.count(
                         crossAxisCount: 3,
                         children: [
@@ -107,7 +105,7 @@ class _ImageSearchState extends State<ImageSearch> {
                         ],
                       ),
                     ),
-                  ),
+            ),
             Text(_selectedLink),
           ],
         ),
