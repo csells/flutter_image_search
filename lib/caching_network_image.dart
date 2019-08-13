@@ -36,10 +36,10 @@ class _CachingNetworkImageState extends State<CachingNetworkImage> {
       await file.writeAsBytes(bytes, flush: true);
     }
 
-    setState(() => _image = Image.memory(bytes));
+    // check to see if we've been disposed before the image is returned (it happens...)
+    if (mounted) setState(() => _image = Image.memory(bytes));
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _image == null ? Center(child: CircularProgressIndicator()) : _image;
+  Widget build(BuildContext context) => _image == null ? Center(child: CircularProgressIndicator()) : _image;
 }
