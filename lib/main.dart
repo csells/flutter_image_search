@@ -66,7 +66,7 @@ class _ImageSearchState extends State<ImageSearch> {
     var res = await _engine.imageSearch(q);
 
     var items = List<cse.Item>();
-    for (var item in res.items??List<cse.Item>()) {
+    for (var item in res.items ?? List<cse.Item>()) {
       // only show results that look like they're images
       // TODO: actually download and check the MIME type
       var pathPart = item.link.split('?')[0]; // file path or url path w/o query string portion
@@ -88,8 +88,8 @@ class _ImageSearchState extends State<ImageSearch> {
             ),
             // TODO: don't show the progress indicator if there are no results
             // TODO: don't show the progress indicator unless we're actually waiting on search results
-            _items.isEmpty
-                ? (_debouncer.isRunning ? Center(child: CircularProgressIndicator()) : Container())
+            _debouncer.isRunning
+                ? Center(child: CircularProgressIndicator())
                 : Expanded(
                     child: Scrollbar(
                       child: GridView.count(
@@ -119,7 +119,7 @@ class _ImageSearchState extends State<ImageSearch> {
     if (value.length < 5)
       _debouncer.stop();
     else
-      _debouncer.run(() =>  search(value));
+      _debouncer.run(() => search(value));
 
     setState(() {
       _items.clear();
@@ -137,7 +137,10 @@ class Debouncer {
 
   void run(VoidCallback action) {
     stop();
-    _timer = Timer(Duration(milliseconds: milliseconds), action);
+    _timer = Timer(Duration(milliseconds: milliseconds), () {
+      stop();
+      action();
+    });
   }
 
   void stop() {
