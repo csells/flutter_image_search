@@ -30,6 +30,8 @@ Right now, the URL is checked for known image extensions to avoid attempting to 
 
 Also, the file handling could easily be fixed to support mobile; PRs gratefully accepted!
 
-Finally, I didn't implementing paging, which the CSE API supports. Instead I just showing the first 10 results, which I consider good enough for demo purposes.
+Further, there is no cache clearing policy -- it just grows forever! This could certainly be improved.
+
+Finally, I didn't implementing paging, which the CSE API supports. Instead I just show the first 10 results, which I consider good enough for demo purposes.
 
 ## Enjoy!
