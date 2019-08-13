@@ -48,8 +48,8 @@ class ImageSearch extends StatefulWidget {
 class _ImageSearchState extends State<ImageSearch> {
   final CachingSearchEngine _engine;
   final _debouncer = Debouncer();
-  List<cse.Item> _items;
-  String _selectedLink;
+  var _items = List<cse.Item>();
+  var _selectedLink = '';
 
   _ImageSearchState()
       : _engine = CachingSearchEngine(
@@ -66,7 +66,7 @@ class _ImageSearchState extends State<ImageSearch> {
     var res = await _engine.imageSearch(q);
 
     var items = List<cse.Item>();
-    for (var item in res.items) {
+    for (var item in res.items??List<cse.Item>()) {
       // only show results that look like they're images
       // TODO: actually download and check the MIME type
       var pathPart = item.link.split('?')[0]; // file path or url path w/o query string portion
@@ -86,8 +86,10 @@ class _ImageSearchState extends State<ImageSearch> {
               decoration: InputDecoration(labelText: 'Search'),
               onChanged: onSearchTextChanged,
             ),
-            _items == null
-                ? (_debouncer.running ? Center(child: CircularProgressIndicator()) : Container())
+            // TODO: don't show the progress indicator if there are no results
+            // TODO: don't show the progress indicator unless we're actually waiting on search results
+            _items.isEmpty
+                ? (_debouncer.isRunning ? Center(child: CircularProgressIndicator()) : Container())
                 : Expanded(
                     child: Scrollbar(
                       child: GridView.count(
@@ -106,7 +108,7 @@ class _ImageSearchState extends State<ImageSearch> {
                       ),
                     ),
                   ),
-            Text(_selectedLink ?? ''),
+            Text(_selectedLink),
           ],
         ),
       );
@@ -117,11 +119,11 @@ class _ImageSearchState extends State<ImageSearch> {
     if (value.length < 5)
       _debouncer.stop();
     else
-      _debouncer.run(() async => await search(value));
+      _debouncer.run(() =>  search(value));
 
     setState(() {
-      _items = null;
-      _selectedLink = null;
+      _items.clear();
+      _selectedLink = '';
     });
   }
 }
@@ -144,5 +146,5 @@ class Debouncer {
     _timer = null;
   }
 
-  bool get running => _timer != null;
+  bool get isRunning => _timer != null;
 }
